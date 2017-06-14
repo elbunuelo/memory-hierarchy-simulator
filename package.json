@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/elbunuelo/memory-hierarchy-simulator/issues"
   },
-  "homepage": "https://github.com/elbunuelo/memory-hierarchy-simulator#readme"
+  "homepage": "https://github.com/elbunuelo/memory-hierarchy-simulator#readme",
+  "dependencies": {
+    "ascii-table": "0.0.9",
+    "clear": "0.0.1"
+  }
 }
