@@ -12,6 +12,7 @@ class Memory {
 
     this.initContents = this.initContents.bind(this);
     this.generateRandomValue = this.generateRandomValue.bind(this);
+    this.getLocation = this.getLocation.bind(this);
 
     this.initContents();
   }
@@ -38,6 +39,11 @@ class Memory {
       table.addRow(location.address, location.value);
     }
     console.log(table.toString());
+  }
+
+  getLocation(memoryLocation) {
+    let index = parseInt(memoryLocation.address, 2);
+    return this.contents[index];
   }
 }
 

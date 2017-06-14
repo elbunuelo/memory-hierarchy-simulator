@@ -3,27 +3,30 @@
 const clear = require('clear');
 const FullyAssociativeCache = require('./models/fully_associative_cache');
 const DirectMappedCache = require('./models/direct_mapped_cache');
+const SetAssociativeCache = require('./models/set_associative_cache');
 const MemoryLocation = require('./models/memory_location');
 const Memory = require('./models/memory');
 const Utils = require('./lib/utils');
 const { LEAST_RECENTLY_USED, FIFO, RANDOM } = require('./lib/constants');
 
+let m = new Memory({ size: 256, blockLength: 1 });
+
 const params = {
   size: 128,
   blockSize: 16,
-  memoryLength: 1,
-  overwriteStrategy: FIFO
+  memory: m,
+  numberOfSets: 4,
+  overwriteStrategy: LEAST_RECENTLY_USED
 };
 
 clear();
-let a = new FullyAssociativeCache(params);
+let a = new SetAssociativeCache(params);
 a.outputBlocks();
 
 setInterval(function(){
   clear();
-  a.write(new MemoryLocation({
+  a.read(new MemoryLocation({
     address: Utils.generateRandomValue(8),
-    value: Utils.generateRandomValue(8),
   }));
   a.outputBlocks();
 }, 1000);
@@ -62,5 +65,3 @@ setInterval(function(){
   //address: "01100101",
   //offset: "0"
 //}));
-//let m = new Memory({ size: 256, blockLength: 1 });
-//m.outputBlocks();
