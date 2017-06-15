@@ -1,13 +1,11 @@
-'use strict';
-
 class Cache {
   constructor(params) {
-    let {
+    const {
       size,
       blockSize,
       overwriteStrategy,
       writeStrategy,
-      memory
+      memory,
     } = params;
 
     this.size = size;
@@ -16,7 +14,7 @@ class Cache {
     this.writeStrategy = writeStrategy;
     this.memory = memory;
 
-    this.numberOfBlocks = size/blockSize;
+    this.numberOfBlocks = size / blockSize;
     this.offsetSize = Math.log2(memory.blockLength);
     this.blockAddressLength = Math.log2(size);
   }

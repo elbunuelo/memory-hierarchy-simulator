@@ -1,11 +1,10 @@
-'use strict';
 const Utils = require('../lib/utils');
 const AsciiTable = require('ascii-table');
 const MemoryLocation = require('./memory_location');
 
 class Memory {
-  constructor(params){
-    let { size, blockLength } = params;
+  constructor(params) {
+    const { size, blockLength } = params;
     this.size = size;
     this.blockLength = blockLength;
     this.contents = [];
@@ -14,11 +13,11 @@ class Memory {
   }
 
   initContents() {
-    const numberOfBlocks = this.size/this.blockLength;
+    const numberOfBlocks = this.size / this.blockLength;
     const addressSize = Math.log2(numberOfBlocks);
     for (let i = 0; i < numberOfBlocks; i++) {
-      let address = Utils.toBinary(i, addressSize);
-      let value = this.generateRandomValue();
+      const address = Utils.toBinary(i, addressSize);
+      const value = this.generateRandomValue();
       this.contents.push(new MemoryLocation({ address, value }));
     }
   }
@@ -29,24 +28,24 @@ class Memory {
   }
 
   outputBlocks() {
-    let table = new AsciiTable('Memory Status');
+    const table = new AsciiTable('Memory Status');
     table.setHeading('ADDRESS', 'VALUE');
-    for (let location of this.contents) {
+    this.contents.forEach((location) => {
       table.addRow(location.address, location.value);
-    }
+    });
+
     console.log(table.toString());
   }
 
   getLocation(memoryLocation) {
-    let index = parseInt(memoryLocation.address, 2);
+    const index = parseInt(memoryLocation.address, 2);
     return this.contents[index];
   }
 
   write(memoryLocation) {
-    index = parseInt(memoryLocation.address, 2);
+    const index = parseInt(memoryLocation.address, 2);
     this.contents[index] = memoryLocation;
   }
-
 }
 
 module.exports = Memory;

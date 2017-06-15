@@ -1,8 +1,6 @@
-'use strict';
-
 class MemoryLocation {
   constructor(params) {
-    let {address, offset, value} = params;
+    const { address, offset, value } = params;
 
     this.address = address;
     this.offset = offset;
@@ -10,4 +8,4 @@ class MemoryLocation {
   }
 }
 
-module.exports =  MemoryLocation;
+module.exports = MemoryLocation;

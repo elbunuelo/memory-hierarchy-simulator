@@ -1,8 +1,6 @@
-'use strict';
-
 class CacheBlock {
   constructor(params) {
-    let { tag, data, valid, recentlyUsed, dirty } = params;
+    const { tag, data, valid, recentlyUsed, dirty } = params;
 
     this.tag = tag;
     this.data = data;
