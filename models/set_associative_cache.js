@@ -25,7 +25,7 @@ class SetAssociativeCache extends Cache {
   }
 
   initSets() {
-    this.sets = {};
+    this.sets = [];
     for (let setIndex = 0; setIndex < this.numberOfSets; setIndex++) {
       const set = {
         index: setIndex,
@@ -194,6 +194,8 @@ class SetAssociativeCache extends Cache {
       index = this.findOverwriteBlockIndex(set);
       console.log('EVICT BLOCK');
       this.evictBlock(set, index);
+    } else {
+      console.log('EMPTY BLOCK FOUND');
     }
 
     set.writeOrder.push(index);

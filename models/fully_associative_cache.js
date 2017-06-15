@@ -20,6 +20,21 @@ class FullyAssociativeCache extends SetAssociativeCache {
 
     return row;
   }
+
+  selectSet() {
+    let selectableSets = this.sets;
+
+    const emptySets = this.sets.filter((set) => {
+      return (set.emptyBlocks.length !== 0);
+    });
+
+    if (emptySets.length !== 0) {
+      selectableSets = emptySets;
+    }
+
+    const randomIndex = Math.floor(Math.random() * selectableSets.length);
+    return selectableSets[randomIndex];
+  }
 }
 
 module.exports = FullyAssociativeCache;
