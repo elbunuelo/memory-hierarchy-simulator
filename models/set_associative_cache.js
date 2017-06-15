@@ -27,6 +27,7 @@ class SetAssociativeCache extends Cache {
     this.sets = {};
     for (let setIndex = 0; setIndex < this.numberOfSets; setIndex++) {
       let set = {
+        index: setIndex,
         blocks: [],
         emptyBlocks: [],
         writeOrder: []
@@ -228,7 +229,7 @@ class SetAssociativeCache extends Cache {
   evictBlock(set, index) {
     let block = set.blocks[index];
     if (this.writeStrategy = WriteHitStrategies.WRITEBACK && block.dirty === 1) {
-      let indexBinary = Utils.toBinary(index, indexSize);
+      let indexBinary = Utils.toBinary(set.index, indexSize);
       let address = indexBinary + block.tag;
       this.memory.write(
         new MemoryLocation({ address, value: block.data })

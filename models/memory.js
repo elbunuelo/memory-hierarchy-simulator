@@ -43,7 +43,7 @@ class Memory {
   }
 
   write(memoryLocation) {
-    index = parseInt(memoryLocation.addrerss, 2);
+    index = parseInt(memoryLocation.address, 2);
     this.contents[index] = memoryLocation;
   }
 
