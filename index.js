@@ -7,7 +7,7 @@ const SetAssociativeCache = require('./models/set_associative_cache');
 const MemoryLocation = require('./models/memory_location');
 const Memory = require('./models/memory');
 const Utils = require('./lib/utils');
-const { LEAST_RECENTLY_USED, FIFO, RANDOM } = require('./lib/constants');
+const { OverwriteStrategies, WriteStrategies } = require('./lib/constants');
 
 let m = new Memory({ size: 256, blockLength: 1 });
 
@@ -16,7 +16,7 @@ const params = {
   blockSize: 16,
   memory: m,
   numberOfSets: 4,
-  overwriteStrategy: LEAST_RECENTLY_USED
+  overwriteStrategy: OverwriteStrategies.LEAST_RECENTLY_USED
 };
 
 clear();

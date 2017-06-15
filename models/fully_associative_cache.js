@@ -7,15 +7,6 @@ const CacheBlock = require('./cache_block');
 class FullyAssociativeCache extends SetAssociativeCache {
   constructor (params) {
     super(Object.assign(params, { numberOfSets: 1 }));
-
-    this.outputBlocks = this.outputBlocks.bind(this);
-    this.write = this.write.bind(this);
-    this.findIndexToWrite = this.findIndexToWrite.bind(this);
-    this.findEmptyBlockIndex = this.findEmptyBlockIndex.bind(this);
-    this.findOverwriteBlockIndex = this.findOverwriteBlockIndex.bind(this);
-    this.findRandomBlockIndex = this.findRandomBlockIndex.bind(this);
-    this.findLeastRecentlyUsedBlockIndex = this.findLeastRecentlyUsedBlockIndex.bind(this);
-    this.findFirstInFirstOutBlockIndex = this.findFirstInFirstOutBlockIndex.bind(this);
   }
 
   getTableHeadings() {

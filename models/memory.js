@@ -10,10 +10,6 @@ class Memory {
     this.blockLength = blockLength;
     this.contents = [];
 
-    this.initContents = this.initContents.bind(this);
-    this.generateRandomValue = this.generateRandomValue.bind(this);
-    this.getLocation = this.getLocation.bind(this);
-
     this.initContents();
   }
 
@@ -45,6 +41,12 @@ class Memory {
     let index = parseInt(memoryLocation.address, 2);
     return this.contents[index];
   }
+
+  write(memoryLocation) {
+    index = parseInt(memoryLocation.addrerss, 2);
+    this.contents[index] = memoryLocation;
+  }
+
 }
 
 module.exports = Memory;

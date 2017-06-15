@@ -3,30 +3,22 @@
 const Cache = require('./cache');
 const CacheBlock = require('./cache_block');
 const AsciiTable = require('ascii-table');
-const { RANDOM, LEAST_RECENTLY_USED, FIFO } = require('../lib/constants');
+const {
+  OverwriteStrategies,
+  WriteHitStrategies,
+  WriteMissStrategies
+} = require('../lib/constants');
 
 class SetAssociativeCache extends Cache {
   constructor(params){
-    let { size, blockSize, numberOfSets, overwriteStrategy } = params;
-
     super(params);
+
+    let { size, blockSize, numberOfSets } = params;
 
     this.numberOfSets = numberOfSets;
     this.setSize = this.numberOfBlocks/numberOfSets;
     this.indexSize = Math.log2(this.setSize);
     this.tagSize = this.blockAddressLength - this.indexSize;
-
-    this.initSets = this.initSets.bind(this);
-    this.findBlock = this.findBlock.bind(this);
-    this.selectSet = this.selectSet.bind(this);
-    this.getTag = this.getTag.bind(this);
-    this.outputBlocks = this.outputBlocks.bind(this);
-    this.getSetnumber = this.getSetNumber.bind(this);
-    this.updateRecentlyUsed = this.updateRecentlyUsed.bind(this);
-    this.getNumberOfRecentlyUsedBlocks = this.getNumberOfRecentlyUsedBlocks.bind(this);
-    this.resetRecentlyUsedBits = this.resetRecentlyUsedBits.bind(this);
-    this.getTableHeadings = this.getTableHeadings.bind(this);
-    this.getTableRow = this.getTableRow.bind(this);
 
     this.initSets();
   }
@@ -79,7 +71,7 @@ class SetAssociativeCache extends Cache {
   }
 
   updateRecentlyUsed(block, set) {
-    if (this.overwriteStrategy === LEAST_RECENTLY_USED) {
+    if (this.overwriteStrategy === OverwriteStrategies.LEAST_RECENTLY_USED) {
       block.recentlyUsed = 1;
       let recentlyUsedTotal = this.getNumberOfRecentlyUsedBlocks(set);
 
@@ -119,7 +111,7 @@ class SetAssociativeCache extends Cache {
       console.log('CACHE READ MISS');
       memoryLocation = this.memory.getLocation(memoryLocation);
       value = memoryLocation.value;
-      this.write(memoryLocation);
+      this.saveToCache(memoryLocation);
     }
 
     return value;
@@ -143,7 +135,7 @@ class SetAssociativeCache extends Cache {
 
   getTableHeadings() {
     let headings = [' ', 'TAG', 'VALID', 'VALUE'];
-    if (this.overwriteStrategy === LEAST_RECENTLY_USED) {
+    if (this.overwriteStrategy === OverwriteStrategies.LEAST_RECENTLY_USED) {
       headings.push('RECENTLY USED');
     }
     return headings;
@@ -151,7 +143,7 @@ class SetAssociativeCache extends Cache {
 
   getTableRow(set, block) {
     let row = [set, block.tag, block.valid, block.data];
-    if (this.overwriteStrategy === LEAST_RECENTLY_USED) {
+    if (this.overwriteStrategy === OverwriteStrategies.LEAST_RECENTLY_USED) {
       row.push(block.recentlyUsed);
     }
     return row;
@@ -175,44 +167,73 @@ class SetAssociativeCache extends Cache {
     console.log(table.toString());
   }
 
-  write(memoryLocation) {
+  saveToCache(memoryLocation) {
     const set = this.selectSet(memoryLocation);
     const tag = this.getTag(memoryLocation);
-
-    let writeIndex = null;
-    for ( let index = 0; index < this.setSize; index++) {
-      const block = set.blocks[index];
-      if (block.tag === tag) {
-        writeIndex = index;
-        break;
-      }
-    }
-
-    if (writeIndex == null) {
-      writeIndex = this.findIndexToWrite(set);
-      set.writeOrder.push(writeIndex)
-    } else {
-      console.log('WRITE HIT');
-    }
 
     let block = new CacheBlock({
       tag,
       data: memoryLocation.value,
     });
 
-    set.blocks[writeIndex] = block;
+    let index = this.findEmptyBlockIndex(set);
+    if (index === null) {
+      index = this.findOverwriteBlockIndex(set);
+      console.log('EVICT BLOCK');
+      this.evictBlock(set, index);
+    }
+
+    set.writeOrder.push(index)
+    set.blocks[index] = block;
 
     this.updateRecentlyUsed(block, set);
   }
 
-  findIndexToWrite(set) {
-    let indexToWrite = this.findEmptyBlockIndex(set);
-    if (indexToWrite === null) {
-      indexToWrite = this.findOverwriteBlockIndex(set);
-    } else {
-      console.log('EMPTY BLOCK FOUND');
+  write(memoryLocation) {
+    const set = this.selectSet(memoryLocation);
+    const tag = this.getTag(memoryLocation);
+
+    let writeIndex = null;
+    let block = null;
+    for (let index = 0; index < this.setSize; index++) {
+      block = set.blocks[index];
+      if (block.tag === tag) {
+        writeIndex = index;
+        break;
+      }
     }
-    return indexToWrite;
+
+    if (block) {
+      this.handleCacheWriteHit(block, memoryLocation);
+    } else {
+      this.handleCacheWriteMiss(memoryLocation);
+    }
+  }
+
+  handleCachWriteHit(block, memoryLocation) {
+    block.data = memoryLocation.value;
+    if (this.writeHitStrategy = WriteHitStrategies.WRITE_BACK) {
+      block.dirty = 1;
+    } else {
+     this.memory.write(memoryLocation);
+    }
+  }
+
+  handleCachWriteMiss(memoryLocation) {
+    if (this.writeMissStrategy = WriteHitStrategies.WRITE_ALLOCATE) {
+      this.memory.write(memoryLocation);
+    }
+  }
+
+  evictBlock(set, index) {
+    let block = set.blocks[index];
+    if (this.writeStrategy = WriteHitStrategies.WRITEBACK && block.dirty === 1) {
+      let indexBinary = Utils.toBinary(index, indexSize);
+      let address = indexBinary + block.tag;
+      this.memory.write(
+        new MemoryLocation({ address, value: block.data })
+      );
+    }
   }
 
   findEmptyBlockIndex(set) {
@@ -227,15 +248,15 @@ class SetAssociativeCache extends Cache {
   findOverwriteBlockIndex(set) {
     let index = null;
     switch(this.overwriteStrategy) {
-      case LEAST_RECENTLY_USED:
+      case OverwriteStrategies.LEAST_RECENTLY_USED:
         console.log('OVERWRITING LEAST RECENTLY USED');
         index = this.findLeastRecentlyUsedBlockIndex(set);
         break;
-      case FIFO:
+      case OverwriteStrategies.FIFO:
         console.log('OVERWRITING OLDEST WRITTEN BLOCK');
         index = this.findFirstInFirstOutBlockIndex(set);
         break
-      case RANDOM:
+      case OverwriteStrategies.RANDOM:
       default:
         console.log('OVERWRITING BLOCK AT RANDOM');
         index = this.findRandomBlockIndex();

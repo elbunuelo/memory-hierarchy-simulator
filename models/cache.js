@@ -1,5 +1,4 @@
 'use strict';
-const { RANDOM } = require('../lib/constants');
 
 class Cache {
   constructor(params) {
@@ -7,12 +6,14 @@ class Cache {
       size,
       blockSize,
       overwriteStrategy,
+      writeStrategy,
       memory
     } = params;
 
     this.size = size;
     this.blockSize = blockSize;
     this.overwriteStrategy = overwriteStrategy;
+    this.writeStrategy = writeStrategy;
     this.memory = memory;
 
     this.numberOfBlocks = size/blockSize;
