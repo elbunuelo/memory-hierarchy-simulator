@@ -2,11 +2,7 @@ const SetAssociativeCache = require('./set_associative_cache');
 
 class DirectMappedCache extends SetAssociativeCache {
   constructor(params) {
-    const { size, blockSize } = params;
-    params.overwrtieStrategy = null;
-
-    const numberOfBlocks = size / blockSize;
-    super(Object.assign(params, { numberOfSets: numberOfBlocks }));
+    super(Object.assign(params, { numberOfSets: 1, overwriteStrategy: null }));
   }
 
   findOverwriteBlockIndex() {

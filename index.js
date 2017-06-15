@@ -9,19 +9,29 @@ const Memory = require('./models/memory');
 const Utils = require('./lib/utils');
 const { OverwriteStrategies, WriteStrategies } = require('./lib/constants');
 
+clear();
 let m = new Memory({ size: 256, blockLength: 1 });
+let v = new FullyAssociativeCache({
+  size: 32,
+  blockSize: 16,
+  memory: m,
+  canAccessMemory: false,
+  title: 'Victim cache',
+});
 
 const params = {
   size: 128,
   blockSize: 16,
   memory: m,
   numberOfSets: 4,
-  overwriteStrategy: OverwriteStrategies.LEAST_RECENTLY_USED
+  canAccessMemory: true,
+  overwriteStrategy: OverwriteStrategies.LEAST_RECENTLY_USED,
+  victimCache: v,
 };
 
-clear();
 let a = new SetAssociativeCache(params);
 a.outputBlocks();
+a.victimCache.outputBlocks();
 
 setInterval(function(){
   clear();
@@ -29,6 +39,7 @@ setInterval(function(){
     address: Utils.generateRandomValue(8),
   }));
   a.outputBlocks();
+  a.victimCache.outputBlocks();
 }, 1000);
 
 //a.write(new MemoryLocation({

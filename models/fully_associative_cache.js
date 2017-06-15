@@ -2,7 +2,9 @@ const SetAssociativeCache = require('./set_associative_cache');
 
 class FullyAssociativeCache extends SetAssociativeCache {
   constructor(params) {
-    super(Object.assign(params, { numberOfSets: 1 }));
+    const { size, blockSize } = params;
+    const numberOfBlocks = size / blockSize;
+    super(Object.assign(params, { numberOfSets: numberOfBlocks }));
   }
 
   getTableHeadings() {

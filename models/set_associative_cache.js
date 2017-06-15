@@ -38,7 +38,7 @@ class SetAssociativeCache extends Cache {
         set.blocks[index] = new CacheBlock({
           valid: '-',
           tag: '-'.repeat(this.tagSize),
-          data: '-'.repeat(this.memory.blockLength * 8),
+          data: '-'.repeat(this.dataSize),
           recentlyUsed: '-',
         });
         set.emptyBlocks.push(index);
@@ -104,19 +104,28 @@ class SetAssociativeCache extends Cache {
   }
 
   read(memoryLocation) {
-    const block = this.findBlock(memoryLocation);
-    let value = null;
+    let block = this.findBlock(memoryLocation);
+    const readMiss = !block;
+
+    if (!block && this.victimCache) {
+      block = this.victimCache.findBlock(memoryLocation);
+    }
+
+    if (block && readMiss) {
+      console.log('VICTIM CACHE HIT');
+    }
+
     if (block) {
-      value = block.data;
-      console.log('CACHE READ HIT');
-    } else {
-      console.log('CACHE READ MISS');
+      memoryLocation.value = block.data;
+    } else if (this.canAccessMemory) {
       memoryLocation = this.memory.getLocation(memoryLocation);
-      value = memoryLocation.value;
+    }
+
+    if (readMiss) {
       this.saveToCache(memoryLocation);
     }
 
-    return value;
+    return memoryLocation;
   }
 
   getTag(memoryLocation) {
@@ -152,7 +161,7 @@ class SetAssociativeCache extends Cache {
   }
 
   outputBlocks() {
-    const table = new AsciiTable('Cache status');
+    const table = new AsciiTable(this.title);
     const headings = this.getTableHeadings();
     table.setHeading(...headings);
 
@@ -212,7 +221,7 @@ class SetAssociativeCache extends Cache {
     }
   }
 
-  handleCachWriteHit(block, memoryLocation) {
+  handleCacheWriteHit(block, memoryLocation) {
     block.data = memoryLocation.value;
     if (this.writeHitStrategy === WriteHitStrategies.WRITE_BACK) {
       block.dirty = 1;
@@ -221,7 +230,7 @@ class SetAssociativeCache extends Cache {
     }
   }
 
-  handleCachWriteMiss(memoryLocation) {
+  handleCacheWriteMiss(memoryLocation) {
     if (this.writeMissStrategy === WriteMissStrategies.WRITE_ALLOCATE) {
       this.writeToMemory(memoryLocation);
     }
@@ -229,16 +238,30 @@ class SetAssociativeCache extends Cache {
 
   evictBlock(set, index) {
     const block = set.blocks[index];
-    if (this.writeStrategy === WriteHitStrategies.WRITEBACK
-          && block.dirty === 1 && block.valid === 1) {
-      const indexBinary = Utils.toBinary(set.index, this.indexSize);
-      const address = indexBinary + block.tag;
-      this.writeToMemory(new MemoryLocation({ address, value: block.data }));
+    if (block.valid === 0) {
+      return;
+    }
+
+    const indexBinary = Utils.toBinary(set.index, this.indexSize);
+    const address = indexBinary + block.tag;
+    const memoryLocation = new MemoryLocation({
+      address,
+      value: block.data,
+    });
+
+    if (this.victimCache) {
+      this.victimCache.saveToCache(memoryLocation);
+    }
+
+    if (block.dirty === 1) {
+      this.writeToMemory(memoryLocation);
     }
   }
 
   writeToMemory(memoryLocation) {
-    this.memory.write(memoryLocation);
+    if (this.canAccessMemory) {
+      this.memory.write(memoryLocation);
+    }
   }
 
   findEmptyBlockIndex(set) {
