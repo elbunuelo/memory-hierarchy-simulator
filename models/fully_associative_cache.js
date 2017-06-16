@@ -24,9 +24,7 @@ class FullyAssociativeCache extends SetAssociativeCache {
   selectSet() {
     let selectableSets = this.sets;
 
-    const emptySets = this.sets.filter((set) => {
-      return (set.emptyBlocks.length !== 0);
-    });
+    const emptySets = this.sets.filter(set => set.emptyBlocks.length !== 0);
 
     if (emptySets.length !== 0) {
       selectableSets = emptySets;

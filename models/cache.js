@@ -7,7 +7,7 @@ class Cache {
       writeStrategy,
       memory,
       victimCache,
-      canAccessMemory,
+      writeBuffer,
       title,
     } = params;
 
@@ -17,13 +17,13 @@ class Cache {
     this.writeStrategy = writeStrategy;
     this.memory = memory;
     this.victimCache = victimCache;
-    this.canAccessMemory = canAccessMemory;
+    this.writeBuffer = writeBuffer;
 
     this.numberOfBlocks = size / blockSize;
     this.offsetSize = Math.log2(memory.blockLength);
     this.blockAddressLength = Math.log2(this.memory.size);
     this.dataSize = this.memory.blockLength * 8;
-    this.title = title || "Cache";
+    this.title = title || 'Cache';
   }
 }
 

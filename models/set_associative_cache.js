@@ -6,7 +6,7 @@ const MemoryLocation = require('./memory_location');
 
 const {
   OverwriteStrategies,
-  WriteHitStrategies,
+  WriteStrategies,
   WriteMissStrategies } = require('../lib/constants');
 const Utils = require('../lib/utils');
 
@@ -115,9 +115,9 @@ class SetAssociativeCache extends Cache {
       console.log('VICTIM CACHE HIT');
     }
 
-    if (block) {
+    if (block && block.valid === 1) {
       memoryLocation.value = block.data;
-    } else if (this.canAccessMemory) {
+    } else {
       memoryLocation = this.memory.getLocation(memoryLocation);
     }
 
@@ -209,14 +209,16 @@ class SetAssociativeCache extends Cache {
     const tag = this.getTag(memoryLocation);
 
     let block = null;
+    let writeHit = false;
     for (let index = 0; index < this.setSize; index++) {
       block = set.blocks[index];
       if (block.tag === tag) {
+        writeHit = true;
         break;
       }
     }
 
-    if (block) {
+    if (writeHit) {
       this.handleCacheWriteHit(block, memoryLocation);
     } else {
       this.handleCacheWriteMiss(memoryLocation);
@@ -225,15 +227,32 @@ class SetAssociativeCache extends Cache {
 
   handleCacheWriteHit(block, memoryLocation) {
     block.data = memoryLocation.value;
-    if (this.writeHitStrategy === WriteHitStrategies.WRITE_BACK) {
+    if (this.writeStrategy === WriteStrategies.WRITE_BACK) {
       block.dirty = 1;
-    } else if (this.writeHitStrategy === WriteHitStrategies.WRITE_THROUGH) {
+    } else if (this.writeStrategy === WriteStrategies.WRITE_THROUGH) {
       this.writeToMemory(memoryLocation);
     }
   }
 
   handleCacheWriteMiss(memoryLocation) {
-    if (this.writeMissStrategy === WriteMissStrategies.WRITE_ALLOCATE) {
+    let willWriteToMemory = false;
+    let dirty = 0;
+
+    if (this.writeStrategy === WriteStrategies.WRITE_THROUGH) {
+      willWriteToMemory = true;
+    } else if (this.writeStrategy === WriteStrategies.WRITE_BACK) {
+      dirty = 1;
+    }
+
+    if (this.writeMissStrategy === WriteMissStrategies.NO_WRITE_ALLOCATE) {
+      willWriteToMemory = true;
+    } else if (this.writeMissStrategy === WriteMissStrategies.WRITE_ALLOCATE) {
+      this.saveToCache(memoryLocation, dirty);
+      const block = this.findBlock(memoryLocation);
+      block.dirty = dirty;
+    }
+
+    if (willWriteToMemory) {
       this.writeToMemory(memoryLocation);
     }
   }
@@ -261,7 +280,9 @@ class SetAssociativeCache extends Cache {
   }
 
   writeToMemory(memoryLocation) {
-    if (this.canAccessMemory) {
+    if (this.writeBuffer) {
+      this.writeBuffer.store(memoryLocation);
+    } else {
       this.memory.write(memoryLocation);
     }
   }
