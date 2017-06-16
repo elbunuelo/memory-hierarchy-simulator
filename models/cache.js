@@ -21,7 +21,7 @@ class Cache {
 
     this.numberOfBlocks = size / blockSize;
     this.offsetSize = Math.log2(memory.blockLength);
-    this.blockAddressLength = Math.log2(this.memory.size);
+    this.blockAddressLength = Math.log2(this.memory.getSize());
     this.dataSize = this.memory.blockLength * 8;
     this.title = title || 'Cache';
   }

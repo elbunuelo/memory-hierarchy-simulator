@@ -5,7 +5,7 @@ class CacheBlock {
     this.tag = tag;
     this.data = data;
     this.valid = valid || 1;
-    this.recentlyUsed = recentlyUsed || 1;
+    this.recentlyUsed = recentlyUsed || 0;
     this.dirty = dirty || 0;
   }
 }

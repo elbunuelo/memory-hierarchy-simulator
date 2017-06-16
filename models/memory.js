@@ -4,21 +4,31 @@ const MemoryLocation = require('./memory_location');
 
 class Memory {
   constructor(params) {
-    const { size, blockLength } = params;
-    this.size = size;
+    const { pageSize, blockLength, numberOfPages } = params;
+    this.pageSize = pageSize;
+    this.numberOfPages = numberOfPages;
     this.blockLength = blockLength;
-    this.contents = [];
+    this.pages = [];
+    this.currentPage = 0;
 
     this.initContents();
   }
 
+  getSize() {
+    return this.pageSize * this.numberOfPages;
+  }
+
   initContents() {
-    const numberOfBlocks = this.size / this.blockLength;
+    const numberOfBlocks = this.getSize() / this.blockLength;
     const addressSize = Math.log2(numberOfBlocks);
-    for (let i = 0; i < numberOfBlocks; i++) {
-      const address = Utils.toBinary(i, addressSize);
-      const value = this.generateRandomValue();
-      this.contents.push(new MemoryLocation({ address, value }));
+    for (let pageIndex = 0; pageIndex < this.numberOfPages; pageIndex++) {
+      const page = [];
+      for (let i = 0; i < numberOfBlocks; i++) {
+        const address = Utils.toBinary(i, addressSize);
+        const value = this.generateRandomValue();
+        page.push(new MemoryLocation({ address, value }));
+      }
+      this.pages.push(page);
     }
   }
 
@@ -28,9 +38,10 @@ class Memory {
   }
 
   outputBlocks() {
-    const table = new AsciiTable('Memory Status');
+    const table = new AsciiTable(`Memory Page ${this.currentPage}`);
     table.setHeading('ADDRESS', 'VALUE');
-    this.contents.forEach((location) => {
+    const page = this.pages[this.currentPage];
+    page.forEach((location) => {
       table.addRow(location.address, location.value);
     });
 
@@ -38,13 +49,31 @@ class Memory {
   }
 
   getLocation(memoryLocation) {
-    const index = parseInt(memoryLocation.address, 2);
-    return this.contents[index];
+    const { physicalAddress, page } = this.getPhysicalAddress(memoryLocation);
+    return page[physicalAddress];
   }
 
   write(memoryLocation) {
-    const index = parseInt(memoryLocation.address, 2);
-    this.contents[index] = memoryLocation;
+    const { physicalAddress, page } = this.getPhysicalAddress(memoryLocation);
+    page[physicalAddress] = memoryLocation;
+  }
+
+  getPhysicalAddress(memoryLocation) {
+    const virtualAddress = parseInt(memoryLocation.address, 2);
+    const pageNumber = Math.floor(virtualAddress / this.pageSize);
+    const physicalAddress = virtualAddress % this.pageSize;
+    const page = this.pages[pageNumber];
+
+    if (pageNumber !== this.currentPage) {
+      this.swapPages(pageNumber);
+    }
+
+    return { physicalAddress, page };
+  }
+
+  swapPages(pageNumber) {
+    console.log('SWAPPING PAGES');
+    this.currentPage = pageNumber;
   }
 }
 

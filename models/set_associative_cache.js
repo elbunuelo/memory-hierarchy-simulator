@@ -18,7 +18,7 @@ class SetAssociativeCache extends Cache {
 
     this.numberOfSets = numberOfSets;
     this.setSize = this.numberOfBlocks / numberOfSets;
-    this.indexSize = Math.log2(this.setSize);
+    this.indexSize = Math.log2(this.numberOfSets);
     this.tagSize = this.blockAddressLength - this.indexSize;
 
     this.initSets();
@@ -91,6 +91,7 @@ class SetAssociativeCache extends Cache {
         numberOfRecentlyUsedBlocks++;
       }
     }
+
     return numberOfRecentlyUsedBlocks;
   }
 
@@ -129,7 +130,7 @@ class SetAssociativeCache extends Cache {
   }
 
   getTag(memoryLocation) {
-    const tag = memoryLocation.address.substr(0, this.tagSize);
+    const tag = memoryLocation.address.substr(this.indexSize);
     return tag;
   }
 
@@ -198,9 +199,11 @@ class SetAssociativeCache extends Cache {
       console.log('EMPTY BLOCK FOUND');
     }
 
-    set.writeOrder.push(index);
-    set.blocks[index] = block;
+    if (this.overwriteStrategy === OverwriteStrategies.FIFO) {
+      set.writeOrder.push(index);
+    }
 
+    set.blocks[index] = block;
     this.updateRecentlyUsed(block, set);
   }
 
