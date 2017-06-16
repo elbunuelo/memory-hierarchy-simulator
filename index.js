@@ -1,6 +1,5 @@
 'use strict';
 
-const clear = require('clear');
 const FullyAssociativeCache = require('./models/fully_associative_cache');
 const DirectMappedCache = require('./models/direct_mapped_cache');
 const SetAssociativeCache = require('./models/set_associative_cache');
@@ -9,9 +8,10 @@ const WriteBuffer = require('./models/write_buffer');
 const MemoryLocation = require('./models/memory_location');
 const Memory = require('./models/memory');
 const Utils = require('./lib/utils');
+const Display = require('./lib/display').getInstance();
+
 const { OverwriteStrategies, WriteStrategies, WriteMissStrategies } = require('./lib/constants');
 
-clear();
 let m = new Memory({ pageSize: 128, numberOfPages: 2, blockLength: 1 });
 let v = new VictimCache({
   size: 32,
@@ -36,17 +36,23 @@ const params = {
   overwriteStrategy: OverwriteStrategies.LEAST_RECENTLY_USED,
   writeStrategy: WriteStrategies.WRITE_THROUGH,
   writeMissStrategy: WriteMissStrategies.NO_WRITE_ALLOCATE,
-  //victimCache: v,
-  //writeBuffer: wb,
+  victimCache: v,
+  writeBuffer: wb,
 };
 
 let a = new SetAssociativeCache(params);
-a.outputBlocks();
+Display.addElement(a.outputBlocks());
+Display.flush();
 
 setInterval(function(){
-  clear();
   a.read(new MemoryLocation({
     address: Utils.generateRandomValue(8),
   }));
-  a.outputBlocks();
-}, 10);
+
+  const cache = Display.addElement(a.outputBlocks());
+  const victimCache = Display.addRightOf(a.victimCache.outputBlocks(), cache);
+  const writeBuffer = Display.addUnder(a.writeBuffer.outputBlocks(), victimCache);
+  Display.addRightOf(m.outputBlocks(), victimCache);
+
+  Display.flush();
+}, 1000);

@@ -1,6 +1,7 @@
 const Utils = require('../lib/utils');
 const AsciiTable = require('ascii-table');
 const MemoryLocation = require('./memory_location');
+const Logger = require('../lib/log').getInstance();
 
 class Memory {
   constructor(params) {
@@ -45,7 +46,7 @@ class Memory {
       table.addRow(location.address, location.value);
     });
 
-    console.log(table.toString());
+    return table;
   }
 
   getLocation(memoryLocation) {
@@ -72,7 +73,7 @@ class Memory {
   }
 
   swapPages(pageNumber) {
-    console.log('SWAPPING PAGES');
+    Logger.info('MEMORY', `SWAPPING PAGES ${pageNumber}`);
     this.currentPage = pageNumber;
   }
 }

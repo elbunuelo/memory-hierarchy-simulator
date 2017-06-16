@@ -9,6 +9,7 @@ const {
   WriteStrategies,
   WriteMissStrategies } = require('../lib/constants');
 const Utils = require('../lib/utils');
+const Logger = require('../lib/log').getInstance();
 
 class SetAssociativeCache extends Cache {
   constructor(params) {
@@ -113,7 +114,7 @@ class SetAssociativeCache extends Cache {
     }
 
     if (block && readMiss) {
-      console.log('VICTIM CACHE HIT');
+      Logger.info('CACHE', 'VICTIM CACHE HIT');
     }
 
     if (block && block.valid === 1) {
@@ -178,7 +179,7 @@ class SetAssociativeCache extends Cache {
       }
     }
 
-    console.log(table.toString());
+    return table;
   }
 
   saveToCache(memoryLocation) {
@@ -193,10 +194,11 @@ class SetAssociativeCache extends Cache {
     let index = this.findEmptyBlockIndex(set);
     if (index === null) {
       index = this.findOverwriteBlockIndex(set);
-      console.log('EVICT BLOCK');
+
+      Logger.info('CACHE', 'EVICT BLOCK');
       this.evictBlock(set, index);
     } else {
-      console.log('EMPTY BLOCK FOUND');
+      Logger.info('CACHE', 'EMPTY BLOCK FOUND');
     }
 
     if (this.overwriteStrategy === OverwriteStrategies.FIFO) {
@@ -303,16 +305,16 @@ class SetAssociativeCache extends Cache {
     let index = null;
     switch (this.overwriteStrategy) {
       case OverwriteStrategies.LEAST_RECENTLY_USED:
-        console.log('OVERWRITING LEAST RECENTLY USED');
+        Logger.info('CACHE', 'OVERWRITING LEAST RECENTLY USED');
         index = this.findLeastRecentlyUsedBlockIndex(set);
         break;
       case OverwriteStrategies.FIFO:
-        console.log('OVERWRITING OLDEST WRITTEN BLOCK');
+        Logger.info('CACHE', 'OVERWRITING OLDEST WRITTEN BLOCK');
         index = this.findFirstInFirstOutBlockIndex(set);
         break;
       case OverwriteStrategies.RANDOM:
       default:
-        console.log('OVERWRITING BLOCK AT RANDOM');
+        Logger.info('CACHE', 'OVERWRITING BLOCK AT RANDOM');
         index = this.findRandomBlockIndex();
         break;
     }

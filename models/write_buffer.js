@@ -1,6 +1,6 @@
 const Cache = require('./cache');
-const MemoryLocation = require('./memory_location');
 const AsciiTable = require('ascii-table');
+const Logger = require('../lib/log').getInstance();
 
 class WriteBuffer extends Cache {
   constructor(params) {
@@ -11,7 +11,7 @@ class WriteBuffer extends Cache {
 
   store(memoryLocation) {
     if (this.blocks.length === this.numberOfBlocks) {
-      console.log('WRITE BUFFER FULL, STALLING');
+      Logger.info('WRITE BUFFER', 'WRITE BUFFER FULL, STALLING');
       this.writeBack();
     }
     this.blocks.push(memoryLocation);
@@ -25,13 +25,14 @@ class WriteBuffer extends Cache {
   }
 
   outputBlocks() {
-    const table = new AsciiTable();
+    const table = new AsciiTable('Write Buffer');
     table.setHeading('Address', 'Value');
     this.blocks.forEach(block => table.addRow(block.address, block.value));
     for (let i = 0; i < (this.numberOfBlocks - this.blocks.length); i++) {
       table.addRow('-'.repeat(this.blockAddressLength), '-'.repeat(this.dataSize));
     }
-    console.log(table.toString());
+
+    return table;
   }
 }
 
