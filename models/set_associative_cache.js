@@ -120,6 +120,8 @@ class SetAssociativeCache extends Cache {
   }
 
   read(memoryLocation) {
+    this.stats.addRead();
+
     Logger.info(this.title, `READING MEMORY LOCATION ${memoryLocation.address}`);
 
     const block = this.findBlock(memoryLocation);
@@ -134,29 +136,32 @@ class SetAssociativeCache extends Cache {
     }
 
     if (victimLocation) {
+      this.stats.addReadHit();
       readLocation = victimLocation;
       Logger.info(this.title, 'VICTIM CACHE HIT');
+      Logger.info('DEBUG', `${victimLocation.value}`);
     }
 
     if (!readMiss) {
       readLocation = new MemoryLocation({
         address: memoryLocation.address,
-        data: block.data,
+        value: block.data,
       });
 
+      this.stats.addReadHit();
       Logger.info(this.title, 'CACHE HIT');
       this.highlight(block, Highlights.SELECT);
-    } else if (!victimLocation) {
-      Logger.info(this.title, 'Read miss');
-      memoryLocation = this.memory.getLocation(memoryLocation);
+    } else if (!victimLocation && !this.isVictimCache) {
+      Logger.info(this.title, 'READ MISS');
+      readLocation = this.memory.getLocation(memoryLocation);
     }
 
-    if (readMiss) {
-      this.saveToCache(memoryLocation);
+    if (readMiss && readLocation) {
+      this.saveToCache(readLocation);
     }
 
     this.refreshDisplay();
-    return memoryLocation;
+    return readLocation;
   }
 
   getTag(memoryLocation) {
@@ -175,17 +180,36 @@ class SetAssociativeCache extends Cache {
   }
 
   getTableHeadings() {
-    const headings = [' ', ' ', 'TAG', 'VALID', 'VALUE'];
+    let headings = [' '];
+    if (this.numberOfSets > 1) {
+      headings.push('SET');
+    }
+
+    headings = [...headings, 'TAG', 'VALID', 'VALUE'];
+
     if (this.overwriteStrategy === OverwriteStrategies.LEAST_RECENTLY_USED) {
       headings.push('RECENTLY USED');
+    }
+    if (this.writeStrategy === WriteStrategies.WRITE_BACK) {
+      headings.push('DIRTY');
     }
     return headings;
   }
 
   getTableRow(set, block) {
-    const row = [block.highlight, set, block.tag, block.valid, block.data];
+    let row = [block.highlight];
+    if (this.numberOfSets > 1) {
+      row.push(set);
+    }
+
+    row = [...row, block.tag, block.valid, block.data];
+
     if (this.overwriteStrategy === OverwriteStrategies.LEAST_RECENTLY_USED) {
       row.push(block.recentlyUsed);
+    }
+
+    if (this.writeStrategy === WriteStrategies.WRITE_BACK) {
+      row.push(block.dirty);
     }
 
     return row;
@@ -215,6 +239,7 @@ class SetAssociativeCache extends Cache {
     const set = this.selectSet(memoryLocation);
     const tag = this.getTag(memoryLocation);
 
+    Logger.info('DEBUG', `Location: ${this.title} -> ${memoryLocation.address} ${memoryLocation.value}`);
     const block = new CacheBlock({
       tag,
       data: memoryLocation.value,
@@ -236,10 +261,13 @@ class SetAssociativeCache extends Cache {
     }
 
     set.blocks[index] = block;
+    Logger.info('DEBUG', `Block: ${this.title} -> ${block.tag} ${block.data}`);
     this.updateRecentlyUsed(block, set);
+    Logger.info('DEBUG', `Block: ${this.title} -> ${block.tag} ${block.data}`);
   }
 
   write(memoryLocation) {
+    this.stats.addWrite();
     Logger.info(this.title, `WRITING TO MEMORY LOCATION ${memoryLocation.address}`);
     const set = this.selectSet(memoryLocation);
     const tag = this.getTag(memoryLocation);
@@ -255,6 +283,7 @@ class SetAssociativeCache extends Cache {
     }
 
     if (writeHit) {
+      this.stats.addWriteHit();
       Logger.info(this.title, 'CACHE WRITE HIT');
       this.handleCacheWriteHit(block, memoryLocation);
       this.highlight(block, Highlights.CHANGED);
@@ -285,11 +314,9 @@ class SetAssociativeCache extends Cache {
       dirty = 1;
     }
 
-    Logger.info('DEBUG', `Write Miss Strategy ${this.writeMissStrategy}`);
     if (this.writeMissStrategy === WriteMissStrategies.NO_WRITE_ALLOCATE) {
       willWriteToMemory = true;
     } else if (this.writeMissStrategy === WriteMissStrategies.WRITE_ALLOCATE) {
-      console.log(memoryLocation);
       this.saveToCache(memoryLocation);
       const block = this.findBlock(memoryLocation);
       block.dirty = dirty;

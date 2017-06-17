@@ -5,6 +5,7 @@ class DirectMappedCache extends SetAssociativeCache {
     const { size, blockSize } = params;
     const numberOfBlocks = size / blockSize;
     super(Object.assign(params, { numberOfSets: numberOfBlocks }));
+    this.overwriteStrategy = null;
   }
 }
 

@@ -5,8 +5,8 @@ class VictimCache extends FullyAssociativeCache {
   constructor(params) {
     super(params);
     this.writeMissStrategy = WriteMissStrategies.WRITE_ALLOCATE;
+    this.isVictimCache = true;
   }
-  read() { }
   writeToMemory() { }
 }
 

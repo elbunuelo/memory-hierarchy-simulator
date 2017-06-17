@@ -18,6 +18,7 @@ class Simulation {
       writeBuffer,
       cache,
       operations,
+      tickInterval,
     } = params;
 
     this.memory = new Memory(memory);
@@ -38,30 +39,35 @@ class Simulation {
     this.cache = this.initCache(cache);
     this.operations = operations.map(operation => new Operation(operation));
     this.currentOperationIndex = 0;
+    this.tickInterval = tickInterval || 1000;
 
     this.initDisplay(params);
   }
 
-  initDisplay() {
+  initDisplay(params) {
     const title = this.getTitleDisplayElement();
-    Display.addElement(title);
     const conventions = this.getConventionsDisplayElement();
-    Display.addUnder(conventions, title);
-    Display.addRightOf(this.cache, title);
-    Display.addUnder(this, conventions);
+    const details = this.getDetailsDisplayElement(params);
 
-    if (this.victimCache) {
-      Display.addRightOf(this.victimCache, this.cache);
-      Display.addRightOf(this.memory, this.victimCache);
-    }
+    Display.addElement(title);
+    Display.addUnder(conventions, title);
+    Display.addRightOf(details, title);
+    Display.addUnder(this.cache, details);
+    Display.addUnder(this, conventions);
+    Display.addUnder(this.cache.stats, this);
 
     if (this.writeBuffer && this.victimCache) {
+      Display.addRightOf(this.victimCache, this.cache);
       Display.addUnder(this.writeBuffer, this.victimCache);
+      Display.addRightOf(this.memory, this.victimCache);
     } else if (this.writeBuffer) {
       Display.addUnder(this.writeBuffer, this.cache);
       Display.addRightOf(this.memory, this.cache);
+    } else if (this.victimCache) {
+      Display.addRightOf(this.victimCache, details);
+      Display.addRightOf(this.memory, this.victimCache);
     } else {
-      Display.addRightOf(this.memory, this.cache);
+      Display.addRightOf(this.memory, details);
     }
 
     Display.flush();
@@ -73,8 +79,15 @@ class Simulation {
       .addRow()
       .addRow('Memory hierarchy simulator')
       .addRow('Nicolas Arias')
-      .addRow(' '.repeat(40));
+      .addRow(' '.repeat(30));
     return title;
+  }
+
+  getDetailsDisplayElement(params) {
+    const details = new AsciiTable(params.title);
+    params.details.forEach((line) => { details.addRow(line); });
+
+    return details;
   }
 
   getConventionsDisplayElement() {
@@ -157,7 +170,7 @@ class Simulation {
   }
 
   run() {
-    this.interval = setInterval(() => this.tick(), 1000);
+    this.interval = setInterval(() => this.tick(), this.tickInterval);
     this.tick();
   }
 }

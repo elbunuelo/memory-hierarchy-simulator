@@ -1,3 +1,5 @@
+const CacheStats = require('./cache_stats');
+
 class Cache {
   constructor(params) {
     const {
@@ -22,9 +24,8 @@ class Cache {
     this.victimCache = victimCache;
     this.writeBuffer = writeBuffer;
     this.events = events;
-
+    this.stats = new CacheStats();
     this.numberOfBlocks = size / blockSize;
-    this.offsetSize = Math.log2(memory.blockLength);
     this.blockAddressLength = Math.log2(this.memory.getSize());
     this.dataSize = this.memory.blockLength * 8;
     this.title = title || 'Cache';

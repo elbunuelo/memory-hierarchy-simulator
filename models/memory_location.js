@@ -1,9 +1,8 @@
 class MemoryLocation {
   constructor(params) {
-    const { address, offset, value } = params;
+    const { address, value } = params;
 
     this.address = address;
-    this.offset = offset;
     this.value = value;
     this.highlight = '  ';
   }
