@@ -285,9 +285,11 @@ class SetAssociativeCache extends Cache {
       dirty = 1;
     }
 
+    Logger.info('DEBUG', `Write Miss Strategy ${this.writeMissStrategy}`);
     if (this.writeMissStrategy === WriteMissStrategies.NO_WRITE_ALLOCATE) {
       willWriteToMemory = true;
     } else if (this.writeMissStrategy === WriteMissStrategies.WRITE_ALLOCATE) {
+      console.log(memoryLocation);
       this.saveToCache(memoryLocation);
       const block = this.findBlock(memoryLocation);
       block.dirty = dirty;

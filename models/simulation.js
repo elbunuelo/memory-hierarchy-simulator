@@ -73,16 +73,16 @@ class Simulation {
       .addRow()
       .addRow('Memory hierarchy simulator')
       .addRow('Nicolas Arias')
-      .addRow();
+      .addRow(' '.repeat(40));
     return title;
   }
 
   getConventionsDisplayElement() {
     const conventions = new AsciiTable();
-    conventions.addRow([Highlights.SELECT, 'Read hit/Memory read'])
-      .addRow([Highlights.EVICT, 'Block Evicted'])
+    conventions.addRow([Highlights.SELECT, 'Read hit / Memory read'])
+      .addRow([Highlights.EVICT, 'Read miss / Block Evicted'])
       .addRow([Highlights.NEW, 'New Block'])
-      .addRow([Highlights.CHANGED, 'Write hit/Memory Write']);
+      .addRow([Highlights.CHANGED, 'Write hit / Memory Write']);
     return conventions;
   }
 
@@ -145,6 +145,7 @@ class Simulation {
 
   tick() {
     Display.refreshElement(this);
+    Display.refreshElement(this.memory);
     const currentOperation = this.operations[this.currentOperationIndex];
     this.executeOperation(currentOperation);
 
@@ -156,7 +157,7 @@ class Simulation {
   }
 
   run() {
-    this.interval = setInterval(() => this.tick(), 2000);
+    this.interval = setInterval(() => this.tick(), 1000);
     this.tick();
   }
 }

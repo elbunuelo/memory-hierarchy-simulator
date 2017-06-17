@@ -5,6 +5,7 @@ class Cache {
       blockSize,
       overwriteStrategy,
       writeStrategy,
+      writeMissStrategy,
       memory,
       victimCache,
       writeBuffer,
@@ -16,6 +17,7 @@ class Cache {
     this.blockSize = blockSize;
     this.overwriteStrategy = overwriteStrategy;
     this.writeStrategy = writeStrategy;
+    this.writeMissStrategy = writeMissStrategy;
     this.memory = memory;
     this.victimCache = victimCache;
     this.writeBuffer = writeBuffer;
