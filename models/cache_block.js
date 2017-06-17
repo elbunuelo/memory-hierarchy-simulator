@@ -7,6 +7,11 @@ class CacheBlock {
     this.valid = valid || 1;
     this.recentlyUsed = recentlyUsed || 0;
     this.dirty = dirty || 0;
+    this.highlight = ' ';
+  }
+
+  resetHighlight() {
+    this.highlight = ' ';
   }
 }
 

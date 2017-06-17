@@ -19,6 +19,7 @@
   "dependencies": {
     "ascii-table": "0.0.9",
     "clear": "0.0.1",
+    "colors": "^1.1.2",
     "window-size": "^1.0.0",
     "winston": "^2.3.1"
   },

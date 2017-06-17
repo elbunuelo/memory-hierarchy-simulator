@@ -2,15 +2,20 @@ const Utils = require('../lib/utils');
 const AsciiTable = require('ascii-table');
 const MemoryLocation = require('./memory_location');
 const Logger = require('../lib/log').getInstance();
+const { Highlights } = require('../lib/constants');
+const Display = require('../lib/display').getInstance();
 
 class Memory {
   constructor(params) {
-    const { pageSize, blockLength, numberOfPages } = params;
+    const { pageSize, blockLength, numberOfPages, events } = params;
     this.pageSize = pageSize;
     this.numberOfPages = numberOfPages;
     this.blockLength = blockLength;
     this.pages = [];
     this.currentPage = 0;
+    this.mostRecentlyAccessedAddress = 0;
+    this.highlightedBlocks = [];
+    this.events = events;
 
     this.initContents();
   }
@@ -20,12 +25,13 @@ class Memory {
   }
 
   initContents() {
-    const numberOfBlocks = this.getSize() / this.blockLength;
-    const addressSize = Math.log2(numberOfBlocks);
+    const numberOfBlocks = this.pageSize / this.blockLength;
+    const addressSize = Math.log2(this.getSize());
     for (let pageIndex = 0; pageIndex < this.numberOfPages; pageIndex++) {
       const page = [];
       for (let i = 0; i < numberOfBlocks; i++) {
-        const address = Utils.toBinary(i, addressSize);
+        const virtualIndex = i + (pageIndex * this.pageSize);
+        const address = Utils.toBinary(virtualIndex, addressSize);
         const value = this.generateRandomValue();
         page.push(new MemoryLocation({ address, value }));
       }
@@ -38,25 +44,39 @@ class Memory {
     return Utils.generateRandomValue(length);
   }
 
-  outputBlocks() {
-    const table = new AsciiTable(`Memory Page ${this.currentPage}`);
-    table.setHeading('ADDRESS', 'VALUE');
-    const page = this.pages[this.currentPage];
-    page.forEach((location) => {
-      table.addRow(location.address, location.value);
-    });
+  toString(rows) {
+    const start = rows * Math.floor(this.mostRecentlyAccessedAddress / rows);
+    const end = Math.min(start + rows, this.pageSize / this.blockLength);
 
-    return table;
+
+    const table = new AsciiTable(`Memory Page ${this.currentPage}`);
+    table.setHeading(' ', 'ADDRESS', 'VALUE');
+    const page = this.pages[this.currentPage];
+
+    for (let i = start; i < end; i++) {
+      const location = page[i];
+      table.addRow(location.highlight, location.address, location.value);
+    }
+
+    return table.toString();
   }
 
   getLocation(memoryLocation) {
     const { physicalAddress, page } = this.getPhysicalAddress(memoryLocation);
-    return page[physicalAddress];
+
+    const physicalMemoryLocation = page[physicalAddress];
+    this.highlight(physicalMemoryLocation, Highlights.SELECT);
+    this.refreshDisplay();
+
+    memoryLocation.value = physicalMemoryLocation.value;
+    return memoryLocation;
   }
 
   write(memoryLocation) {
     const { physicalAddress, page } = this.getPhysicalAddress(memoryLocation);
+    this.highlight(memoryLocation, Highlights.WRITE);
     page[physicalAddress] = memoryLocation;
+    this.refreshDisplay();
   }
 
   getPhysicalAddress(memoryLocation) {
@@ -69,12 +89,28 @@ class Memory {
       this.swapPages(pageNumber);
     }
 
+    this.mostRecentlyAccessedAddress = physicalAddress;
     return { physicalAddress, page };
   }
 
   swapPages(pageNumber) {
     Logger.info('MEMORY', `SWAPPING PAGES ${pageNumber}`);
     this.currentPage = pageNumber;
+  }
+
+  highlight(memoryLocation, highlight) {
+    memoryLocation.highlight = highlight;
+    this.highlightedBlocks.push(memoryLocation);
+  }
+
+  refreshDisplay() {
+    Display.refreshElement(this);
+    this.clearHighlights();
+  }
+
+  clearHighlights() {
+    this.highlightedBlocks.forEach(memoryLocation => memoryLocation.resetHighlight());
+    this.highlightedBlocks = [];
   }
 }
 

@@ -7,9 +7,12 @@ const MemoryLocation = require('./memory_location');
 const {
   OverwriteStrategies,
   WriteStrategies,
-  WriteMissStrategies } = require('../lib/constants');
+  WriteMissStrategies,
+  Highlights,
+} = require('../lib/constants');
 const Utils = require('../lib/utils');
 const Logger = require('../lib/log').getInstance();
+const Display = require('../lib/display').getInstance();
 
 class SetAssociativeCache extends Cache {
   constructor(params) {
@@ -21,6 +24,7 @@ class SetAssociativeCache extends Cache {
     this.setSize = this.numberOfBlocks / numberOfSets;
     this.indexSize = Math.log2(this.numberOfSets);
     this.tagSize = this.blockAddressLength - this.indexSize;
+    this.highlightedBlocks = [];
 
     this.initSets();
   }
@@ -73,6 +77,16 @@ class SetAssociativeCache extends Cache {
     return block;
   }
 
+  highlight(block, highlight) {
+    block.highlight = highlight;
+    this.highlightedBlocks.push(block);
+  }
+
+  clearHighlights() {
+    this.highlightedBlocks.forEach(block => block.resetHighlight());
+    this.highlightedBlocks = [];
+  }
+
   updateRecentlyUsed(block, set) {
     if (this.overwriteStrategy === OverwriteStrategies.LEAST_RECENTLY_USED) {
       block.recentlyUsed = 1;
@@ -106,20 +120,34 @@ class SetAssociativeCache extends Cache {
   }
 
   read(memoryLocation) {
-    let block = this.findBlock(memoryLocation);
+    Logger.info(this.title, `READING MEMORY LOCATION ${memoryLocation.address}`);
+
+    const block = this.findBlock(memoryLocation);
     const readMiss = !block;
 
+    let victimLocation = null;
+    let readLocation = null;
+
     if (!block && this.victimCache) {
-      block = this.victimCache.findBlock(memoryLocation);
+      Logger.info(this.title, 'ATTEMPT READ FROM VICTIM CACHE');
+      victimLocation = this.victimCache.read(memoryLocation);
     }
 
-    if (block && readMiss) {
-      Logger.info('CACHE', 'VICTIM CACHE HIT');
+    if (victimLocation) {
+      readLocation = victimLocation;
+      Logger.info(this.title, 'VICTIM CACHE HIT');
     }
 
-    if (block && block.valid === 1) {
-      memoryLocation.value = block.data;
-    } else {
+    if (!readMiss) {
+      readLocation = new MemoryLocation({
+        address: memoryLocation.address,
+        data: block.data,
+      });
+
+      Logger.info(this.title, 'CACHE HIT');
+      this.highlight(block, Highlights.SELECT);
+    } else if (!victimLocation) {
+      Logger.info(this.title, 'Read miss');
       memoryLocation = this.memory.getLocation(memoryLocation);
     }
 
@@ -127,6 +155,7 @@ class SetAssociativeCache extends Cache {
       this.saveToCache(memoryLocation);
     }
 
+    this.refreshDisplay();
     return memoryLocation;
   }
 
@@ -136,9 +165,8 @@ class SetAssociativeCache extends Cache {
   }
 
   getSetNumber(memoryLocation) {
-    const integerValue = parseInt(memoryLocation.address, 2);
-    const setNumber = integerValue % this.numberOfSets;
-    return setNumber;
+    const setBinary = memoryLocation.address.substr(0, this.indexSize);
+    return parseInt(setBinary, 2);
   }
 
   selectSet(memoryLocation) {
@@ -147,7 +175,7 @@ class SetAssociativeCache extends Cache {
   }
 
   getTableHeadings() {
-    const headings = [' ', 'TAG', 'VALID', 'VALUE'];
+    const headings = [' ', ' ', 'TAG', 'VALID', 'VALUE'];
     if (this.overwriteStrategy === OverwriteStrategies.LEAST_RECENTLY_USED) {
       headings.push('RECENTLY USED');
     }
@@ -155,14 +183,15 @@ class SetAssociativeCache extends Cache {
   }
 
   getTableRow(set, block) {
-    const row = [set, block.tag, block.valid, block.data];
+    const row = [block.highlight, set, block.tag, block.valid, block.data];
     if (this.overwriteStrategy === OverwriteStrategies.LEAST_RECENTLY_USED) {
       row.push(block.recentlyUsed);
     }
+
     return row;
   }
 
-  outputBlocks() {
+  toString() {
     const table = new AsciiTable(this.title);
     const headings = this.getTableHeadings();
     table.setHeading(...headings);
@@ -179,7 +208,7 @@ class SetAssociativeCache extends Cache {
       }
     }
 
-    return table;
+    return table.toString();
   }
 
   saveToCache(memoryLocation) {
@@ -193,12 +222,13 @@ class SetAssociativeCache extends Cache {
 
     let index = this.findEmptyBlockIndex(set);
     if (index === null) {
+      Logger.info(this.title, 'NO EMPTY BLOCK FOUND, EVICTING');
       index = this.findOverwriteBlockIndex(set);
-
-      Logger.info('CACHE', 'EVICT BLOCK');
       this.evictBlock(set, index);
+      this.highlight(block, Highlights.EVICT);
     } else {
-      Logger.info('CACHE', 'EMPTY BLOCK FOUND');
+      Logger.info(this.title, 'EMPTY BLOCK FOUND');
+      this.highlight(block, Highlights.NEW);
     }
 
     if (this.overwriteStrategy === OverwriteStrategies.FIFO) {
@@ -210,6 +240,8 @@ class SetAssociativeCache extends Cache {
   }
 
   write(memoryLocation) {
+    this.clearHighlights();
+    Logger.info(this.title, `WRITING TO MEMORY LOCATION ${memoryLocation.address}`);
     const set = this.selectSet(memoryLocation);
     const tag = this.getTag(memoryLocation);
 
@@ -224,10 +256,15 @@ class SetAssociativeCache extends Cache {
     }
 
     if (writeHit) {
+      Logger.info(this.title, 'CACHE WRITE HIT');
       this.handleCacheWriteHit(block, memoryLocation);
+      this.highlight(block, Highlights.changed);
     } else {
+      Logger.info(this.title, 'CACHE WRITE MISS');
       this.handleCacheWriteMiss(memoryLocation);
     }
+
+    this.refreshDisplay();
   }
 
   handleCacheWriteHit(block, memoryLocation) {
@@ -252,7 +289,7 @@ class SetAssociativeCache extends Cache {
     if (this.writeMissStrategy === WriteMissStrategies.NO_WRITE_ALLOCATE) {
       willWriteToMemory = true;
     } else if (this.writeMissStrategy === WriteMissStrategies.WRITE_ALLOCATE) {
-      this.saveToCache(memoryLocation, dirty);
+      this.saveToCache(memoryLocation);
       const block = this.findBlock(memoryLocation);
       block.dirty = dirty;
     }
@@ -270,13 +307,14 @@ class SetAssociativeCache extends Cache {
 
     const indexBinary = Utils.toBinary(set.index, this.indexSize);
     const address = indexBinary + block.tag;
+    Logger.info(this.title, `EVICTING BLOCK ${block.tag} FROM SET ${set.index}`);
     const memoryLocation = new MemoryLocation({
       address,
       value: block.data,
     });
 
     if (this.victimCache) {
-      this.victimCache.saveToCache(memoryLocation);
+      this.victimCache.write(memoryLocation);
     }
 
     if (block.dirty === 1) {
@@ -305,16 +343,16 @@ class SetAssociativeCache extends Cache {
     let index = null;
     switch (this.overwriteStrategy) {
       case OverwriteStrategies.LEAST_RECENTLY_USED:
-        Logger.info('CACHE', 'OVERWRITING LEAST RECENTLY USED');
+        Logger.info(this.title, 'OVERWRITING LEAST RECENTLY USED');
         index = this.findLeastRecentlyUsedBlockIndex(set);
         break;
       case OverwriteStrategies.FIFO:
-        Logger.info('CACHE', 'OVERWRITING OLDEST WRITTEN BLOCK');
+        Logger.info(this.title, 'OVERWRITING OLDEST WRITTEN BLOCK');
         index = this.findFirstInFirstOutBlockIndex(set);
         break;
       case OverwriteStrategies.RANDOM:
       default:
-        Logger.info('CACHE', 'OVERWRITING BLOCK AT RANDOM');
+        Logger.info(this.title, 'OVERWRITING BLOCK AT RANDOM');
         index = this.findRandomBlockIndex();
         break;
     }
@@ -342,6 +380,11 @@ class SetAssociativeCache extends Cache {
 
   findFirstInFirstOutBlockIndex(set) {
     return set.writeOrder.shift();
+  }
+
+  refreshDisplay() {
+    Display.refreshElement(this);
+    this.clearHighlights();
   }
 }
 

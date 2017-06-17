@@ -5,6 +5,11 @@ class MemoryLocation {
     this.address = address;
     this.offset = offset;
     this.value = value;
+    this.highlight = '  ';
+  }
+
+  resetHighlight() {
+    this.highlight = '  ';
   }
 }
 

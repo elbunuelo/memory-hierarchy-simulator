@@ -24,7 +24,7 @@ class WriteBuffer extends Cache {
     }
   }
 
-  outputBlocks() {
+  toString() {
     const table = new AsciiTable('Write Buffer');
     table.setHeading('Address', 'Value');
     this.blocks.forEach(block => table.addRow(block.address, block.value));
@@ -32,7 +32,7 @@ class WriteBuffer extends Cache {
       table.addRow('-'.repeat(this.blockAddressLength), '-'.repeat(this.dataSize));
     }
 
-    return table;
+    return table.toString();
   }
 }
 

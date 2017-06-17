@@ -9,6 +9,7 @@ class Cache {
       victimCache,
       writeBuffer,
       title,
+      events,
     } = params;
 
     this.size = size;
@@ -18,6 +19,7 @@ class Cache {
     this.memory = memory;
     this.victimCache = victimCache;
     this.writeBuffer = writeBuffer;
+    this.events = events;
 
     this.numberOfBlocks = size / blockSize;
     this.offsetSize = Math.log2(memory.blockLength);
