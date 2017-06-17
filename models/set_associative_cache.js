@@ -240,7 +240,6 @@ class SetAssociativeCache extends Cache {
   }
 
   write(memoryLocation) {
-    this.clearHighlights();
     Logger.info(this.title, `WRITING TO MEMORY LOCATION ${memoryLocation.address}`);
     const set = this.selectSet(memoryLocation);
     const tag = this.getTag(memoryLocation);
@@ -258,7 +257,7 @@ class SetAssociativeCache extends Cache {
     if (writeHit) {
       Logger.info(this.title, 'CACHE WRITE HIT');
       this.handleCacheWriteHit(block, memoryLocation);
-      this.highlight(block, Highlights.changed);
+      this.highlight(block, Highlights.CHANGED);
     } else {
       Logger.info(this.title, 'CACHE WRITE MISS');
       this.handleCacheWriteMiss(memoryLocation);

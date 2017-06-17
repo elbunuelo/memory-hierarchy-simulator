@@ -74,7 +74,7 @@ class Memory {
 
   write(memoryLocation) {
     const { physicalAddress, page } = this.getPhysicalAddress(memoryLocation);
-    this.highlight(memoryLocation, Highlights.WRITE);
+    this.highlight(memoryLocation, Highlights.CHANGED);
     page[physicalAddress] = memoryLocation;
     this.refreshDisplay();
   }
