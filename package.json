@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "first": "node index.js 1",
+    "second": "node index.js 2",
+    "third": "node index.js 3",
+    "fourth": "node index.js 4"
   },
   "repository": {
     "type": "git",
@@ -19,7 +22,6 @@
   "dependencies": {
     "ascii-table": "0.0.9",
     "clear": "0.0.1",
-    "colors": "^1.1.2",
     "window-size": "^1.0.0",
     "winston": "^2.3.1"
   },

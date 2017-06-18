@@ -6,7 +6,7 @@ const {
   OperationTypes } = require('../lib/constants');
 
 module.exports = {
-  tickInterval: 500,
+  tickInterval: 1000,
   title: 'Fully associative cache',
   description: 'Fully associative cache with random overwrite strategy, ' +
     'write through + no write allocate write strategies and ' +
