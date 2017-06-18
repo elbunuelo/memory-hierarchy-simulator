@@ -4,7 +4,7 @@
 The project only needs nodejs to run, [here are installation instructions for mac os and other platforms]( https://nodejs.org/en/download/package-manager/#osx).
 
 # Running
-* First, you must get the sources from github either by [https://github.com/elbunuelo/memory-hierarchy-simulator/archive/master.zip](downloading the zip file) or cloning the repository by running `git clone https://github.com/elbunuelo/memory-hierarchy-simulator.git`
+* First, you must get the sources from github either by [downloading the zip file](https://github.com/elbunuelo/memory-hierarchy-simulator/archive/master.zip) or cloning the repository by running `git clone https://github.com/elbunuelo/memory-hierarchy-simulator.git`
 * After cloning the repository run `cd memory-hierarchy-simulator` and then `npm install` to install all of the dependencies.
 * Run one of the following commands to view the simulations:
     * `npm run first`: Simulates a fully associative cache with first in first out overwrite strategy, write through + no write allocate write strategies and single page memory.
