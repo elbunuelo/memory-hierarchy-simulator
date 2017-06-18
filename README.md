@@ -1,7 +1,7 @@
 # Memory hierarchy simulator
 
 # Dependencies
-The project only needs nodejs to run, [here are installation instructions for mac os and other platforms]( https://nodejs.org/en/download/package-manager/#osx).
+The project needs the latest version of nodejs to run (tested on v8.1.0), [here are installation instructions for mac os and other platforms]( https://nodejs.org/en/download/package-manager/#osx).
 
 # Running
 * First, you must get the sources from github either by [downloading the zip file](https://github.com/elbunuelo/memory-hierarchy-simulator/archive/master.zip) or cloning the repository by running `git clone https://github.com/elbunuelo/memory-hierarchy-simulator.git`
