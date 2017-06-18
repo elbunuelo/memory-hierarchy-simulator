@@ -15,7 +15,11 @@ The project needs the latest version of nodejs to run (tested on v8.1.0), [here 
 # Creating new simulations
 
 New simulations should be placed in the `simulations` folder with any name. The file contents should follow the same format as the existing simulations which can be used as reference. 
-To execute custom simulations you can either run `node index.js your-file-name`(without the .js extension) or add an entry in the scripts object in the package.json: `scripts: {
+To execute custom simulations you can either run `node index.js your-file-name`(without the .js extension) or add an entry in the scripts object in the package.json: 
+```
+scripts: {
 ...
 "my-custom-simulation": "node index.js your-file-name"
-}` and then run `npm run my-custom-simulation`
+}
+``` 
+and then run `npm run my-custom-simulation`
