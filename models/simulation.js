@@ -39,7 +39,7 @@ class Simulation {
     this.cache = this.initCache(cache);
     this.operations = operations.map(operation => new Operation(operation));
     this.currentOperationIndex = 0;
-    this.tickInterval = tickInterval || 1000;
+    this.tickInterval = tickInterval || 2000;
 
     this.initDisplay(params);
   }
@@ -62,7 +62,7 @@ class Simulation {
       Display.addRightOf(this.memory, this.victimCache);
     } else if (this.writeBuffer) {
       Display.addUnder(this.writeBuffer, this.cache);
-      Display.addRightOf(this.memory, this.cache);
+      Display.addRightOf(this.memory, details);
     } else if (this.victimCache) {
       Display.addRightOf(this.victimCache, details);
       Display.addRightOf(this.memory, this.victimCache);

@@ -36,11 +36,15 @@ class CacheStats {
 
     let readHitsPercentage = `${readHits.toFixed(2)}%`;
     if (readHits < 10) {
+      readHitsPercentage = `00${readHitsPercentage}`;
+    } else if (readHits < 100) {
       readHitsPercentage = `0${readHitsPercentage}`;
     }
 
     let writeHitsPercentage = `${writeHits.toFixed(2)}%`;
     if (writeHits < 10) {
+      writeHitsPercentage = `00${writeHitsPercentage}`;
+    } else if (writeHits < 100) {
       writeHitsPercentage = `0${writeHitsPercentage}`;
     }
     table.addRow(['Read Hits', readHitsPercentage])

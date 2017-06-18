@@ -2,7 +2,7 @@ const SetAssociativeCache = require('./set_associative_cache');
 
 class FullyAssociativeCache extends SetAssociativeCache {
   constructor(params) {
-    super(Object.assign(params, { numberOfSets: 1, overwriteStrategy: null }));
+    super(Object.assign(params, { numberOfSets: 1 }));
   }
 
   selectSet() {
