@@ -8,7 +8,7 @@ const {
 module.exports = {
   tickInterval: 1000,
   title: 'Fully associative cache',
-  description: 'Fully associative cache with random overwrite strategy, ' +
+  description: 'Fully associative cache with first in first out overwrite strategy, ' +
     'write through + no write allocate write strategies and ' +
     'single page memory.',
   details: [
